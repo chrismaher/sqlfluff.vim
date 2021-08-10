@@ -49,8 +49,24 @@ function! sqlfluff#Lint(...)
     " adjust this later to build a quickfix list using the results from multiple arguments
     " let l:fname = a:0 == 0 ? expand('%') : a:1
 
+    " extract this check
+    if system('command -v sqlfluff') !~# '\w\+'
+        echohl WarningMsg
+        echo 'sqlfluff not found'
+        echohl None
+        return
+    endif
+
     let l:lint = split(system('sqlfluff lint ' . shellescape(expand('%'))), '\n')
     let l:parsed = s:parse(l:lint)
-    call setqflist(l:parsed)
-    execute 'copen'
+    if empty(l:parsed)
+        " generalize this
+        echohl Function
+        echo "sqlfluff: [lint] SUCCESS"
+        echohl None
+    else
+        call setqflist(l:parsed, 'r')
+        call setqflist([], 'a', {'title' : 'sqlfluff lint'})
+        execute 'copen'
+    endif
 endfunction
